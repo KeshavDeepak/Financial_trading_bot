@@ -1,0 +1,13 @@
+[
+    {
+        "model": "06 Jun - 00 34",
+        "lookback": 60,
+        "train_test_split": 0.8,
+        "ticker": "AAPL",
+        "start_date": "2015-01-01",
+        "end_date": "2023-01-01",
+        "initial_balance": 10000,
+        "epochs": 3,
+        "batch_size": 32
+    }
+]
