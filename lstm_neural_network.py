@@ -276,7 +276,7 @@ class LSTMTradingAgent:
             models = json.load(file)
             
             models.append({
-                'model' : datetime.now().strftime("%d %b - %H %M"),
+                'name' : datetime.now().strftime("%d %b - %H %M"),
                 'lookback' : self.look_back,
                 'train_test_split' : self.train_test_split,
                 'ticker' : ticker,
@@ -308,7 +308,7 @@ if __name__ == "__main__":
     end_date = '2023-01-01'
     initial_balance = 10000
     
-    epochs = 3
+    epochs = 100
     batch_size = 32
     
     try:
@@ -322,13 +322,13 @@ if __name__ == "__main__":
         agent.train_model(epochs=epochs, batch_size=batch_size)
         
         # Plot training history
-        # agent.plot_training_history()
+        agent.plot_training_history()
         
-        # Backtest the strategy
+        # Backtest
         portfolio_value, trades = agent.backtest(initial_balance=initial_balance)
         
         # Plot backtest results
-        # agent.plot_backtest_results(portfolio_value)
+        agent.plot_backtest_results(portfolio_value)
         
         # Print trade summary
         agent.print_trade_summary(trades, portfolio_value, initial_balance)

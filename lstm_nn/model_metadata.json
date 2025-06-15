@@ -1,6 +1,6 @@
 [
     {
-        "model": "06 Jun - 00 34",
+        "name": "06 Jun - 00 34",
         "lookback": 60,
         "train_test_split": 0.8,
         "ticker": "AAPL",
@@ -8,6 +8,28 @@
         "end_date": "2023-01-01",
         "initial_balance": 10000,
         "epochs": 3,
+        "batch_size": 32
+    },
+    {
+        "name": "14 Jun - 21 17",
+        "lookback": 60,
+        "train_test_split": 0.8,
+        "ticker": "AAPL",
+        "start_date": "2015-01-01",
+        "end_date": "2023-01-01",
+        "initial_balance": 10000,
+        "epochs": 10,
+        "batch_size": 32
+    },
+    {
+        "name": "14 Jun - 21 23",
+        "lookback": 60,
+        "train_test_split": 0.8,
+        "ticker": "AAPL",
+        "start_date": "2015-01-01",
+        "end_date": "2023-01-01",
+        "initial_balance": 10000,
+        "epochs": 100,
         "batch_size": 32
     }
 ]
