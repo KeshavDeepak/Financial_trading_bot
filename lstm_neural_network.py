@@ -141,25 +141,26 @@ class LSTMTradingAgent:
         Make predictions using the trained model
         
         Parameters:
-        - input_data: Input data for prediction
+        - input_data: Input data for prediction (shape: [1, look_back, 1])
         
         Returns:
         - predictions: Model predictions
         """
-        # Scale the input data
-        scaled_input = self.scaler.transform(input_data)
         
-        # Prepare the input for prediction
-        X = []
-        X.append(scaled_input[-self.look_back:, 0])
-        X = np.array(X)
-        X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+        # Flatten to 2D for scaler (reshape to [look_back, 1])
+        input_2d = input_data.reshape(-1, 1)
+        
+        # Scale the input data
+        scaled_input = self.scaler.transform(input_2d)
+        
+        # Reshape back to 3D for LSTM [1, look_back, 1]
+        X = scaled_input.reshape(1, -1, 1)
         
         # Make prediction
         scaled_prediction = self.model.predict(X)
         prediction = self.scaler.inverse_transform(scaled_prediction)
         
-        return float(prediction[0][0])  # Convert to float
+        return float(prediction[0][0])
     
     def backtest(self, initial_balance=10000):
         """
@@ -188,7 +189,7 @@ class LSTMTradingAgent:
         portfolio_value = []
         trades = []
         
-        # Simple trading strategy
+        # Simple threshold-based strategy
         for i in range(1, len(predictions)):
             current_price = float(y_test[i][0])  # Convert to float
             predicted_price = float(predictions[i][0])  # Convert to float
