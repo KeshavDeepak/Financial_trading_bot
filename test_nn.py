@@ -1,4 +1,4 @@
-from lstm_neural_network import LSTMTradingAgent
+from build_nn import LSTMTradingAgent
 
 import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
@@ -8,9 +8,10 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 import json
 
 #* load up a saved agent
-model_name = "06 Jun - 00 34"
+# model_name = "06 Jun - 00 34"
 # model_name = "14 Jun - 21 17"
-# model_name = "14 Jun - 21 23"
+model_name = "14 Jun - 21 23"
+# model_name = "17 Jul - 19 12"
 
 # import the agent's saved info
 with open("lstm_nn/model_metadata.json", "r") as file:
@@ -24,14 +25,14 @@ agent = LSTMTradingAgent(look_back=agent_info['lookback'], train_test_split=agen
 
 # load the saved model
 agent.load_model(f"lstm_nn/{model_name}.h5", f"scalers/{model_name}.save")
-df = agent.fetch_data(agent_info['ticker'], agent_info['start_date'], agent_info['end_date'])
+df = agent.fetch_data(agent_info['ticker'], agent_info['start_date'], agent_info['end_date'], agent_info['interval'])
 agent.prepare_data()
 
 #* backtest
 portfolio_value, trades = agent.backtest(initial_balance=agent_info['initial_balance'])
 
 #* plot backtest results
-# agent.plot_backtest_results(portfolio_value)
+agent.plot_backtest_results(portfolio_value)
 
 #* evaluate the model on its own (without any trading strategy)
 # Fetch test data

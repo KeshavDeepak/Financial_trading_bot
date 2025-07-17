@@ -1,19 +1,25 @@
+'''
+this one is a variant of the original lstm_nn model in which the x includes more features and y is binary in nature and
+predicts if the price will go up (1) or down (0) the next day
+'''
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import yfinance as yf
+
 from sklearn.preprocessing import MinMaxScaler
+
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.models import load_model
 
-import joblib 
-import sys
-import json
 from datetime import datetime
 
+import joblib
+import json
 
 class LSTMTradingAgent:
     def __init__(self, look_back=60, train_test_split=0.8):
@@ -42,14 +48,14 @@ class LSTMTradingAgent:
         Returns:
         - DataFrame with stock data
         """
+        
         print(f"Fetching data for {ticker} from {start_date} to {end_date}...")
         data = yf.download(ticker, start=start_date, end=end_date, interval=interval)
         
         if data.empty:
             raise ValueError(f"No data returned for {ticker}. Check the ticker symbol and date range.")
             
-        # Use closing prices for simplicity
-        self.data = data[['Close']].values
+        self.data = data[['Open', 'High', 'Low', 'Close', 'Volume']].values
         self.dates = data.index
         
         # Normalize the data
@@ -70,7 +76,14 @@ class LSTMTradingAgent:
         X, y = [], []
         for i in range(self.look_back, len(data)):
             X.append(data[i-self.look_back:i, 0])
-            y.append(data[i, 0])
+            
+            # target to predict is a binary up-down of whether the price will go up or down the next day
+            current_close = data[i][3]
+            next_close = data[i + 1][3]
+            
+            # 1 if price goes up the next day, 0 if it does not
+            y.append(1 if next_close > current_close else 0)
+            
         return np.array(X), np.array(y)
     
     def prepare_data(self):
@@ -100,11 +113,11 @@ class LSTMTradingAgent:
             Dropout(0.2),
             LSTM(units=50),
             Dropout(0.2),
-            Dense(units=1)
+            Dense(units=1, activation='sigmoid') # sigmoid ensures a binary output is given
         ])
         
-        optimizer = Adam(learning_rate=0.001)
-        self.model.compile(optimizer=optimizer, loss='mean_squared_error')
+        # optimizer = Adam(learning_rate=0.001)
+        self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
         
     def train_model(self, epochs=100, batch_size=32):
         """
@@ -161,6 +174,18 @@ class LSTMTradingAgent:
         prediction = self.scaler.inverse_transform(scaled_prediction)
         
         return float(prediction[0][0])
+
+    def predict_direction(self, input_data):
+        # input_data shape: (look_back, 5)
+        input_data = np.array(input_data).reshape(-1, 5)
+        
+        scaled_input = self.scaler.transform(input_data)
+        
+        X = scaled_input.reshape(1, self.look_back, 5)
+        prob = self.model.predict(X)[0][0]
+        
+        return 1 if prob > 0.5 else 0
+
     
     def backtest(self, initial_balance=10000):
         """
@@ -174,14 +199,11 @@ class LSTMTradingAgent:
         - trades: Array of trades made
         """
         # Prepare test data
-        test_data = self.scaled_data[-len(self.X_test):]
-        X_test, y_test = self.create_dataset(test_data)
-        X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+        X_test, y_test = self.create_dataset(self.scaled_data)
+        X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], X_test.shape[2])
         
         # Get predictions
-        predictions = self.model.predict(X_test)
-        predictions = self.scaler.inverse_transform(predictions)
-        y_test = self.scaler.inverse_transform(y_test.reshape(-1, 1))
+        predictions = self.model.predict(X_test).flatten()
         
         # Initialize trading variables
         balance = initial_balance
@@ -189,29 +211,28 @@ class LSTMTradingAgent:
         portfolio_value = []
         trades = []
         
-        # Simple threshold-based strategy
-        for i in range(1, len(predictions)):
-            current_price = float(y_test[i][0])  # Convert to float
-            predicted_price = float(predictions[i][0])  # Convert to float
-            
-            # Buy signal: predicted price > current price
-            if predicted_price > current_price and position == 0:
-                position = balance / current_price
+        # buy all if price is predicted to go up -- sell all if price is predicted to go down
+        for i in range(len(predictions)):
+            current_close = self.data[self.look_back + i][3]
+            predicted_up = predictions[i] > 0.5
+
+            # buy signal -- if price is going to go up -- buy as many shares as possible
+            if predicted_up and position == 0:
+                position = balance / current_close
                 balance = 0
-                trades.append(('buy', current_price, str(self.dates[-len(y_test)+i])))
-            
-            # Sell signal: predicted price < current price
-            elif predicted_price < current_price and position > 0:
-                balance = position * current_price
+                trades.append(('buy', current_close, str(self.dates[self.look_back + i])))
+
+            # sell signal -- if price is going to go down -- sell all the shares and convert to cash 
+            elif not predicted_up and position > 0:
+                balance = position * current_close
                 position = 0
-                trades.append(('sell', current_price, str(self.dates[-len(y_test)+i])))
-            
-            # Calculate portfolio value
+                trades.append(('sell', current_close, str(self.dates[self.look_back + i])))
+
             if position > 0:
-                portfolio_value.append(float(position * current_price))
+                portfolio_value.append(position * current_close)
             else:
-                portfolio_value.append(float(balance))
-        
+                portfolio_value.append(balance)
+
         return portfolio_value, trades
     
     def plot_backtest_results(self, portfolio_value):
@@ -224,7 +245,7 @@ class LSTMTradingAgent:
         plt.legend()
         plt.show()
         
-    def print_trade_summary(self, trades, portfolio_value, initial_balance):
+    def print_trade_summary(self, trades, portfolio_value, initial_balance, ticker, start_date, end_date):
         """Print a summary of the trading performance"""
         if not trades:
             print("No trades were executed during the backtest period.")
@@ -266,7 +287,7 @@ class LSTMTradingAgent:
             print(f"Average loss: ${avg_loss:.2f} per share")
             print(f"Risk/Reward ratio: {abs(avg_win/avg_loss):.2f}:1")
     
-    def save_model(self, model_path, scaler_path, ticker, start_date, end_date, initial_balance, epochs, batch_size):
+    def save_model(self, model_path, scaler_path, ticker, start_date, end_date, initial_balance, epochs, batch_size, interval):
         """Save model and scaler to disk"""
         
         self.model.save(model_path)
@@ -286,6 +307,7 @@ class LSTMTradingAgent:
                 'initial_balance' : initial_balance,
                 'epochs' : epochs,
                 'batch_size' : batch_size,
+                'interval' : interval
             })
             
             file.seek(0)
@@ -297,47 +319,3 @@ class LSTMTradingAgent:
         self.model = load_model(model_path)
         self.scaler = joblib.load(scaler_path)
         print(f"Model loaded from {model_path}, scaler from {scaler_path}")
-         
-
-if __name__ == "__main__":
-    # Initialize the trading agent
-    agent = LSTMTradingAgent(look_back=60, train_test_split=0.8)
-    
-    # Fetch data from Yahoo Finance
-    ticker = 'AAPL' 
-    start_date = '2015-01-01'
-    end_date = '2023-01-01'
-    initial_balance = 10000
-    
-    epochs = 100
-    batch_size = 32
-    
-    try:
-        df = agent.fetch_data(ticker, start_date, end_date)
-        
-        # Prepare data
-        agent.prepare_data()
-        
-        # Build and train the model
-        agent.build_model()
-        agent.train_model(epochs=epochs, batch_size=batch_size)
-        
-        # Plot training history
-        agent.plot_training_history()
-        
-        # Backtest
-        portfolio_value, trades = agent.backtest(initial_balance=initial_balance)
-        
-        # Plot backtest results
-        agent.plot_backtest_results(portfolio_value)
-        
-        # Print trade summary
-        agent.print_trade_summary(trades, portfolio_value, initial_balance)
-        
-        # save model
-        current_time = datetime.now().strftime("%d %b - %H %M")
-        agent.save_model("./lstm_nn/" + current_time + ".h5", "./scalers/" + current_time + ".save",
-                         ticker, start_date, end_date, initial_balance, epochs, batch_size)
-        
-    except Exception as e:
-        print(f"\nError: {str(e)}")
