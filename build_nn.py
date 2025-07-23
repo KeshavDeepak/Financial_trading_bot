@@ -7,16 +7,14 @@ if __name__ == "__main__":
     
     # Fetch data from Yahoo Finance
     ticker = 'AAPL'
-    
     start_date = '2015-01-01'
-    
     end_date = '2023-01-01'
-
     
     initial_balance = 10000
     interval = '1d'
     
-    epochs = 3
+    # set model hyperparameters
+    epochs = 100
     batch_size = 32
     
     try:

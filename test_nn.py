@@ -10,8 +10,8 @@ import json
 #* load up a saved agent
 # model_name = "06 Jun - 00 34"
 # model_name = "14 Jun - 21 17"
-model_name = "14 Jun - 21 23"
-# model_name = "17 Jul - 19 12"
+# model_name = "14 Jun - 21 23"
+model_name = "23 Jul - 21 24"
 
 # import the agent's saved info
 with open("lstm_nn/model_metadata.json", "r") as file:
@@ -36,8 +36,9 @@ agent.plot_backtest_results(portfolio_value)
 
 #* evaluate the model on its own (without any trading strategy)
 # Fetch test data
-test_data = yf.download('AAPL', start='2023-01-01', end='2024-01-01')['Close'].values.reshape(-1, 1)
-dates = yf.download('AAPL', start='2023-01-01', end='2024-01-01').index
+test_df = yf.download('AAPL', start='2023-01-01', end='2024-01-01')
+test_data = test_df[['Open', 'High', 'Low', 'Close', 'Volume']].values
+dates = test_df.index
 
 # Store predictions and true values
 predictions = []
@@ -53,7 +54,7 @@ for i in range(window_size, len(test_data)):
     
     # Preprocess for prediction
     scaled_data = agent.scaler.transform(input_data)
-    X = scaled_data.reshape(1, window_size, 1)  # Reshape to [1, [lookback], 1]
+    X = scaled_data.reshape(1, window_size, 5)  # Reshape to [1, [lookback], 5]
     
     # Predict next day's price
     pred = agent.predict(X)

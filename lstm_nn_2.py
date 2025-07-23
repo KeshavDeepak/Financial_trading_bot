@@ -74,8 +74,8 @@ class LSTMTradingAgent:
         - X, y: Features and targets for the LSTM
         """
         X, y = [], []
-        for i in range(self.look_back, len(data)):
-            X.append(data[i-self.look_back:i, 0])
+        for i in range(self.look_back, len(data) - 1):
+            X.append(data[i-self.look_back:i, :])
             
             # target to predict is a binary up-down of whether the price will go up or down the next day
             current_close = data[i][3]
@@ -99,15 +99,15 @@ class LSTMTradingAgent:
         self.y_train, self.y_test = y[:train_size], y[train_size:]
         
         # Reshape for LSTM [samples, time steps, features]
-        self.X_train = np.reshape(self.X_train, (self.X_train.shape[0], self.X_train.shape[1], 1))
-        self.X_test = np.reshape(self.X_test, (self.X_test.shape[0], self.X_test.shape[1], 1))
+        # self.X_train = np.reshape(self.X_train, (self.X_train.shape[0], self.X_train.shape[1], 5))
+        # self.X_test = np.reshape(self.X_test, (self.X_test.shape[0], self.X_test.shape[1], 5))
         
     def build_model(self):
         """
         Build the LSTM model architecture
         """
         self.model = Sequential([
-            LSTM(units=50, return_sequences=True, input_shape=(self.X_train.shape[1], 1)),
+            LSTM(units=50, return_sequences=True, input_shape=(self.X_train.shape[1], self.X_train.shape[2])),
             Dropout(0.2),
             LSTM(units=50, return_sequences=True),
             Dropout(0.2),
@@ -127,7 +127,7 @@ class LSTMTradingAgent:
         - epochs: Number of training epochs
         - batch_size: Size of training batches
         """
-        early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+        early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
         
         self.history = self.model.fit(
             self.X_train, self.y_train,
@@ -244,7 +244,41 @@ class LSTMTradingAgent:
         plt.ylabel('Portfolio Value ($)')
         plt.legend()
         plt.show()
+    
+    
+    def plot_trade_signals(self, trades):
+        """
+        Plot the stock price with buy/sell markers based on executed trades.
         
+        Parameters:
+        - trades: List of tuples (action, price, date)
+        """
+        close_prices = [row[3] for row in self.data]  # Extract close prices
+        dates = self.dates[:len(close_prices)]       # Match date range
+
+        plt.figure(figsize=(14, 7))
+        plt.plot(dates, close_prices, label='Close Price', color='blue', alpha=0.6)
+
+        buy_dates = [pd.to_datetime(t[2]) for t in trades if t[0] == 'buy']
+        buy_prices = [t[1] for t in trades if t[0] == 'buy']
+        sell_dates = [pd.to_datetime(t[2]) for t in trades if t[0] == 'sell']
+        sell_prices = [t[1] for t in trades if t[0] == 'sell']
+
+        # Plot buy signals
+        plt.scatter(buy_dates, buy_prices, marker='^', color='green', label='Buy', s=100)
+
+        # Plot sell signals
+        plt.scatter(sell_dates, sell_prices, marker='v', color='red', label='Sell', s=100)
+
+        plt.title('Stock Price with Buy/Sell Signals')
+        plt.xlabel('Date')
+        plt.ylabel('Price')
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
+    
     def print_trade_summary(self, trades, portfolio_value, initial_balance, ticker, start_date, end_date):
         """Print a summary of the trading performance"""
         if not trades:
