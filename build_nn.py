@@ -5,12 +5,13 @@ if __name__ == "__main__":
     # Initialize the trading agent
     agent = LSTMTradingAgent(look_back=60, train_test_split=0.8)
     
-    # Fetch data from Yahoo Finance
-    ticker = 'AAPL'
-    start_date = '2015-01-01'
-    end_date = '2023-01-01'
+    # Choose data to train on
+    # ticker = 'AAPL'
+    # start_date = '2015-01-01'
+    # end_date = '2023-01-01'
+    ticker, start_date, end_date = 'AMD', '2018-01-01', '2023-12-31'
     
-    initial_balance = 10000
+    initial_balance = 100
     interval = '1d'
     
     # set model hyperparameters
@@ -38,12 +39,18 @@ if __name__ == "__main__":
         # Plot backtest results
         agent.plot_backtest_results(portfolio_value)
         
+        # Plot trade signals on the stock line
+        agent.plot_trade_signals(trades)
+        
         # Print trade summary
         agent.print_trade_summary(trades, portfolio_value, initial_balance, ticker, start_date, end_date)
         
         # save model
         current_time = datetime.now().strftime("%d %b - %H %M")
-        agent.save_model("./lstm_nn/" + current_time + ".h5", "./scalers/" + current_time + ".save",
+        
+        agent.save_model("./lstm_nn/" + current_time + ".h5", 
+                         "./scalers/" + current_time + ".save",
+                         current_time,
                          ticker, start_date, end_date, initial_balance, epochs, batch_size, interval)
         
     except Exception as e:

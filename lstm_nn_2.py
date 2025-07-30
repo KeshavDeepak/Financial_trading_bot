@@ -20,6 +20,7 @@ from datetime import datetime
 
 import joblib
 import json
+import pickle
 
 class LSTMTradingAgent:
     def __init__(self, look_back=60, train_test_split=0.8):
@@ -129,6 +130,7 @@ class LSTMTradingAgent:
         """
         early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
         
+        # fit the model onto the training data
         self.history = self.model.fit(
             self.X_train, self.y_train,
             epochs=epochs,
@@ -138,11 +140,15 @@ class LSTMTradingAgent:
             verbose=1
         )
     
-    def plot_training_history(self):
+    def plot_training_history(self, history=None):
+        history_data = history if history else self.history.history
+        
         """Plot the training and validation loss"""
         plt.figure(figsize=(10, 6))
-        plt.plot(self.history.history['loss'], label='Training Loss')
-        plt.plot(self.history.history['val_loss'], label='Validation Loss')
+        # plt.plot(self.history.history['loss'], label='Training Loss')
+        plt.plot(history_data['loss'], label='Training Loss')
+        # plt.plot(self.history.history['val_loss'], label='Validation Loss')
+        plt.plot(history_data['val_loss'], label='Validation Loss')
         plt.title('Model Loss')
         plt.xlabel('Epochs')
         plt.ylabel('Loss')
@@ -199,12 +205,19 @@ class LSTMTradingAgent:
         - trades: Array of trades made
         """
         # Prepare test data
-        X_test, y_test = self.create_dataset(self.scaled_data)
+        X_test, _ = self.create_dataset(self.scaled_data)
         X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], X_test.shape[2])
         
         # Get predictions
         predictions = self.model.predict(X_test).flatten()
         
+        # Plot a histogram showing the frequency distributions of the predictions (from 0 to 1) of the model
+        plt.hist(predictions, bins=20)
+        plt.title("Model Prediction Distribution")
+        plt.xlabel("Predicted Probability")
+        plt.ylabel("Frequency")
+        plt.show()
+
         # Initialize trading variables
         balance = initial_balance
         position = 0
@@ -321,18 +334,24 @@ class LSTMTradingAgent:
             print(f"Average loss: ${avg_loss:.2f} per share")
             print(f"Risk/Reward ratio: {abs(avg_win/avg_loss):.2f}:1")
     
-    def save_model(self, model_path, scaler_path, ticker, start_date, end_date, initial_balance, epochs, batch_size, interval):
-        """Save model and scaler to disk"""
-        
+    def save_model(self, model_path, scaler_path, current_time, 
+                   ticker, start_date, end_date, initial_balance, epochs, batch_size, interval):
+        """Save model and scaler to disk"""        
+        # save the model
         self.model.save(model_path)
+        
+        # save the scaler
         joblib.dump(self.scaler, scaler_path)
+        
+        # output confirmation message
         print(f"Model saved to {model_path}, scaler to {scaler_path}")
         
+        # save the important hyperparameters 
         with open('./lstm_nn/model_metadata.json', 'r+') as file:
             models = json.load(file)
             
             models.append({
-                'name' : datetime.now().strftime("%d %b - %H %M"),
+                'name' : current_time,
                 'lookback' : self.look_back,
                 'train_test_split' : self.train_test_split,
                 'ticker' : ticker,
@@ -341,12 +360,14 @@ class LSTMTradingAgent:
                 'initial_balance' : initial_balance,
                 'epochs' : epochs,
                 'batch_size' : batch_size,
-                'interval' : interval
+                'interval' : interval,
+                'history' : self.history.history
             })
             
             file.seek(0)
             
             json.dump(models, file, indent=4)
+        
 
     def load_model(self, model_path='./lstm_nn/trading_model.h5', scaler_path='./scalers/scaler.save'):
         """Load model and scaler from disk"""

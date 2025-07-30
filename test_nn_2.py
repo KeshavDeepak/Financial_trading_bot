@@ -5,15 +5,13 @@ this tests the second variant of the neural network model in which the predictio
 from build_nn import LSTMTradingAgent
 
 import yfinance as yf
-from sklearn.preprocessing import MinMaxScaler
 import numpy as np
-from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 import json
 
 #* load up a saved agent
-model_name = "23 Jul - 21 24"
-# model_name = "24 Jul - 02 39"
+# model_name = "30 Jul - 21 08"
+model_name = "31 Jul - 04 06"
 
 # import the agent's saved info
 with open("lstm_nn/model_metadata.json", "r") as file:
@@ -30,12 +28,16 @@ agent.load_model(f"lstm_nn/{model_name}.h5", f"scalers/{model_name}.save")
 df = agent.fetch_data(agent_info['ticker'], agent_info['start_date'], agent_info['end_date'], agent_info['interval'])
 agent.prepare_data()
 
+#* view the training and validation losses
+agent.plot_training_history(agent_info['history'])
+
 #* backtest
 portfolio_value, trades = agent.backtest(initial_balance=agent_info['initial_balance'])
 
 #* plot backtest results
 agent.plot_backtest_results(portfolio_value)
 
+#* plot trade signals on the stock line
 agent.plot_trade_signals(trades)
 
 #* evaluate the model on its own (without any trading strategy)
@@ -48,9 +50,9 @@ dates = test_df.index
 predictions = []
 true_values = []
 
-# rollow window prediction for the year
-window_size = agent_info["lookback"]  # look_back period
-step = 1          # move forward 1 day at a time
+# Rolling window prediction for the year
+window_size = agent_info["lookback"] # look_back period
+step = 1 # move forward 1 day at a time
 
 for i in range(window_size, len(test_data) - 1):
     # Get the last [lookback] days of data
@@ -76,6 +78,5 @@ agent.print_trade_summary(trades, portfolio_value, agent_info["initial_balance"]
 14th june -- 21 17 (10) -- horrendous
 14th june - 21 23 (68 [early stopped])-- best!
 
-23 Jul - 21 24 (3 epochs) -- pretty decent actually
-24 Jul - 02 39 (13 epochs ES) -- 
+23 Jul - 21 24 (3 epochs) -- pretty decent actually -- not good training data, only predicted upwards movement
 '''
