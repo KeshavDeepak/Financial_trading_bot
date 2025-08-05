@@ -12,7 +12,6 @@ import json
 #* load up a saved agent
 # model_name = "30 Jul - 21 08"
 model_name = "31 Jul - 04 06"
-
 # import the agent's saved info
 with open("lstm_nn/model_metadata.json", "r") as file:
     agent_info = next((model for model in json.load(file) if model["name"] == model_name), None)
@@ -43,7 +42,9 @@ agent.plot_trade_signals(trades)
 #* evaluate the model on its own (without any trading strategy)
 # Fetch test data
 test_df = yf.download('AAPL', start='2023-01-01', end='2024-01-01')
+
 test_data = test_df[['Open', 'High', 'Low', 'Close', 'Volume']].values
+
 dates = test_df.index
 
 # Store predictions and true values
@@ -79,4 +80,6 @@ agent.print_trade_summary(trades, portfolio_value, agent_info["initial_balance"]
 14th june - 21 23 (68 [early stopped])-- best!
 
 23 Jul - 21 24 (3 epochs) -- pretty decent actually -- not good training data, only predicted upwards movement
+31 Jul - 04 06 (100 epochs) -- BEST AS OF NOW 
+01 Aug - 01 19 (100 epochs no early stopping) -- this was just with the close price given as input feature, did not perform as well
 '''

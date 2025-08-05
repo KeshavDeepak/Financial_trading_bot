@@ -59,6 +59,9 @@ class LSTMTradingAgent:
         self.data = data[['Open', 'High', 'Low', 'Close', 'Volume']].values
         self.dates = data.index
         
+        # keep track of the index the closing prices sit in for later use 
+        self.close_index = 3
+        
         # Normalize the data
         self.scaled_data = self.scaler.fit_transform(self.data)
         
@@ -79,8 +82,8 @@ class LSTMTradingAgent:
             X.append(data[i-self.look_back:i, :])
             
             # target to predict is a binary up-down of whether the price will go up or down the next day
-            current_close = data[i][3]
-            next_close = data[i + 1][3]
+            current_close = data[i][self.close_index]
+            next_close = data[i + 1][self.close_index]
             
             # 1 if price goes up the next day, 0 if it does not
             y.append(1 if next_close > current_close else 0)
@@ -128,7 +131,7 @@ class LSTMTradingAgent:
         - epochs: Number of training epochs
         - batch_size: Size of training batches
         """
-        early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
+        # early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
         
         # fit the model onto the training data
         self.history = self.model.fit(
@@ -136,7 +139,7 @@ class LSTMTradingAgent:
             epochs=epochs,
             batch_size=batch_size,
             validation_data=(self.X_test, self.y_test),
-            callbacks=[early_stopping],
+            # callbacks=[early_stopping],
             verbose=1
         )
     
@@ -226,7 +229,7 @@ class LSTMTradingAgent:
         
         # buy all if price is predicted to go up -- sell all if price is predicted to go down
         for i in range(len(predictions)):
-            current_close = self.data[self.look_back + i][3]
+            current_close = self.data[self.look_back + i][self.close_index]
             predicted_up = predictions[i] > 0.5
 
             # buy signal -- if price is going to go up -- buy as many shares as possible
@@ -266,7 +269,7 @@ class LSTMTradingAgent:
         Parameters:
         - trades: List of tuples (action, price, date)
         """
-        close_prices = [row[3] for row in self.data]  # Extract close prices
+        close_prices = [row[self.close_index] for row in self.data]  # Extract close prices
         dates = self.dates[:len(close_prices)]       # Match date range
 
         plt.figure(figsize=(14, 7))
