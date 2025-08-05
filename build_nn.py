@@ -1,5 +1,5 @@
 from datetime import datetime
-from lstm_nn_2 import LSTMTradingAgent
+from lstm_nn_3 import LSTMTradingAgent
 
 if __name__ == "__main__":
     # Initialize the trading agent

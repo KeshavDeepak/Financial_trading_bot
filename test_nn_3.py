@@ -1,5 +1,5 @@
 '''
-this tests the second variant of the neural network model in which the predictions are binary (up/down)
+this tests the third variant of the neural network model in which the predictions are up/down/neutral
 '''
 
 from build_nn import LSTMTradingAgent
@@ -10,8 +10,7 @@ import numpy as np
 import json
 
 #* load up a saved agent
-# model_name = "30 Jul - 21 08"
-model_name = "31 Jul - 04 06"
+model_name = "05 Aug - 17 57"
 
 # import the agent's saved info
 with open("lstm_nn/model_metadata.json", "r") as file:
@@ -60,14 +59,30 @@ for i in range(window_size, len(test_data) - 1):
     # Get the last [lookback] days of data
     input_data = test_data[i-window_size:i]
     
-    # Predict if price is going to go up or down
-    pred = agent.predict_direction(input_data)
+    # Predict if price is going to go up or down or will stay the same
+    pred = np.argmax(agent.predict_direction(input_data)[1])
     predictions.append(pred)
     
-    # Store true price change (binary)
-    true_values.append(1 if test_data[i + 1][3] > test_data[i][3] else 0)
+    # Store true price change -- match this to its original in the lstm_nn_3 bot
+    current_close = test_data[i][agent.close_index]
+    next_close = test_data[i + 1][agent.close_index]
+    
+    # 0 is down, 1 is neutral, 2 is up
+    threshold = 0.01
+    
+    change = (next_close - current_close) / current_close
+    
+    if change > threshold:
+        label = 2
+    elif change < -threshold:
+        label = 0
+    else:
+        label = 1
+    
+    true_values.append(label)
 
 # directional accuracy
+print(predictions, true_values)
 accuracy = np.mean(np.array(true_values) == np.array(predictions)) * 100
 
 print(f"Directional Accuracy: {accuracy:.2f}%")
@@ -76,11 +91,6 @@ print(f"Directional Accuracy: {accuracy:.2f}%")
 agent.print_trade_summary(trades, portfolio_value, agent_info["initial_balance"], agent_info["ticker"], agent_info["start_date"], agent_info["end_date"])
 
 '''
-6th june - 00 34 (3) -- kind of good
-14th june -- 21 17 (10) -- horrendous
-14th june - 21 23 (68 [early stopped])-- best!
-
-23 Jul - 21 24 (3 epochs) -- pretty decent actually -- not good training data, only predicted upwards movement
-31 Jul - 04 06 (100 epochs) -- BEST AS OF NOW 
-01 Aug - 01 19 (100 epochs no early stopping) -- this was just with the close price given as input feature, did not perform as well
+05 Aug - 17 57 (100 epochs no early stopping) -- 
+    with the 3rd lstm bot, does decent but still no convergence and validation loss seems to be increasing for some reason
 '''
