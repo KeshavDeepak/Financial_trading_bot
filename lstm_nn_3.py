@@ -135,7 +135,7 @@ class LSTMTradingAgent:
             Dropout(0.2),
             LSTM(units=50),
             Dropout(0.2),
-            Dense(units=3, activation='softmax') # sigmoid ensures a binary output is given
+            Dense(units=3, activation='softmax')
         ])
         
         # optimizer = Adam(learning_rate=0.001)
