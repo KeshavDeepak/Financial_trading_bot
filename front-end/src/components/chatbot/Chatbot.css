@@ -1,0 +1,35 @@
+/* ----------------------------------------------- Dialogue.jsx styling ---------------------------------------------*/
+#dialogue, #dialogue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* space between messages */
+  padding: 1rem;
+
+  align-items: center;
+}
+
+/* Shared message styles */
+.message {
+  max-width: 250px;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  word-break: break-word;
+}
+
+/* User messages */
+.message.user {
+  background-color: #1f2937; /* dark gray */
+  color: white;
+
+  /* right-aligned */
+  align-self: flex-end; 
+}
+
+/* Bot messages */
+.message.bot {
+  background-color: #374151; /* light gray */
+  color: white;
+
+  /* left-aligned */
+  align-self: flex-start; 
+}
