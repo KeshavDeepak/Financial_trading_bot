@@ -5,7 +5,7 @@ import Chatbot from './components/chatbot/Chatbot';
 export default function App() {
   return (
     <> 
-      <h1 id="welcome_text"> What do you want to do today? </h1>
+      <h1 id="welcome_text"> How can I help you today? </h1>
 
       <Chatbot />
     </>

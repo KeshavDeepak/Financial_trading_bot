@@ -1,5 +1,5 @@
 /* ----------------------------------------------- Dialogue.jsx styling ---------------------------------------------*/
-#dialogue, #dialogue-list {
+#dialogue {
   display: flex;
   flex-direction: column;
   gap: 0.5rem; /* space between messages */
@@ -26,7 +26,7 @@
 }
 
 /* Bot messages */
-.message.bot {
+.message.assistant {
   background-color: #374151; /* light gray */
   color: white;
 

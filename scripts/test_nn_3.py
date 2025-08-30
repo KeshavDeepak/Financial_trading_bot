@@ -2,7 +2,7 @@
 this tests the third variant of the neural network model in which the predictions are up/down/neutral
 '''
 
-from build_nn import LSTMTradingAgent
+from backend.lstm_nn_3 import LSTMTradingAgent
 
 import yfinance as yf
 import numpy as np

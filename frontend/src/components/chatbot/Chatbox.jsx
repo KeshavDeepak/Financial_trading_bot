@@ -21,8 +21,6 @@ export default function Chatbox({ handleUserInput }) {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask something..."
             />
-
-            {/* <button type="submit">Send</button> */}
         </form>
     )
 }

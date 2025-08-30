@@ -30,5 +30,5 @@ def visualize(ticker, start, end):
     plt.tight_layout()
     plt.show()
 
-if __name__ == "__main__":
-    visualize('AMD', '2018-01-01', '2023-12-31')
+# if __name__ == "__main__":
+#     visualize('AMD', '2018-01-01', '2023-12-31')
