@@ -53,6 +53,8 @@ def show(ticker, start, end):
 def normalize_command(command):
     command_components = command.split()
     
+    if len(command_components) < 2: return [command]
+    
     command_components[1] = COMPANY_TO_TICKER[command_components[1]]
     
     return command_components

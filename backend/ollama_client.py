@@ -1,10 +1,9 @@
-import re
 from backend.parser_config import *
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from ollama import chat, ChatResponse
+from ollama import chat
 
 #* name of model
 MODEL = 'gemma3:4b' 
@@ -38,11 +37,10 @@ async def parse_command(request: Request):
     response = chat(model=MODEL, messages=messages)
     command = response.message.content.strip()
     
-    #* filter through commands and utilize the appropriate function
+    #* split the command up into its components
     command_components = normalize_command(command)
     
-    print(command_components)
-    
+    #* filter through commands and utilize the appropriate function
     match command_components[0]:
         case "show":
             img64 = show(command_components[1], command_components[2], command_components[3]) 
@@ -51,6 +49,11 @@ async def parse_command(request: Request):
                 "command" : command_components[0],
                 "answer" : img64
             }
+        case "buy":
+            #!!! what to do now
+            pass
+        case "error":
+            print('error')
 
 
 
