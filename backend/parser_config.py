@@ -7,70 +7,27 @@ import matplotlib.pyplot as plt
 
 import yfinance as yf
 
-#* show [ticker] [start] [end]
-def show(ticker, start, end):
-    """
-    Fetches and visualizes the closing price of a stock over a given time period.
+from backend.utils import *
 
-    Parameters:
-        ticker (str): Stock ticker symbol (e.g., 'AAPL', 'TSLA').
-        start (str): Start date in 'YYYY-MM-DD' format.
-        end (str): End date in 'YYYY-MM-DD' format.
-    """
-    
-    # Download historical data
-    data = yf.download(ticker, start=start, end=end)
+#* ------------------------------------------------------ CONSTANTS ---------------------------------------------------
 
-    # Check if data was returned
-    if data.empty:
-        print(f"No data found for {ticker} between {start} and {end}.")
-        return
-
-    # Plot the closing price
-    plt.figure(figsize=(12, 6))
-    plt.plot(data['Close'], label='Close Price', color='blue')
-    plt.title(f"{ticker} Stock Price from {start} to {end}")
-    plt.xlabel("Date")
-    plt.ylabel("Price (USD)")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    
-    # save the plot so it can be returned to the front-end
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png")
-    plt.close() # to avoid errors
-    buf.seek(0)
-    
-    img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")\
-    
-    return img_base64
-    
-    # plt.show()
-
-#* normalize the command
-#* Convert name of company to appropriate ticker name
-def normalize_command(command):
-    command_components = command.split()
-    
-    if len(command_components) < 2: return [command]
-    
-    command_components[1] = COMPANY_TO_TICKER[command_components[1]]
-    
-    return command_components
-    
+#* the name of the agent being used
+MODEL_NAME = '05 Aug - 17 57'
 
 #* the model is setup as an user input parser
-SETUP_MODEL_PROMPT = {
+SETUP_MODEL_FOR_USER_PROMPT = {
     'role': "system",
     'content':
         '''
             You are a trading command parser. Your job is to take the user's text and convert it into exactly one of these commands:
-            - buy [ticker]
-            - sell [ticker]
+            - suggest [ticker]
             - show [ticker] [start] [end]  
                 [start] and [end] must strictly be in "yyyy-mm-dd" format
                 starting time must be before (chronologically) ending time
+                
+            Functionality of each of the above commands 
+            - 'suggest' is chosen when the user is asking for guidance on whether to buy/sell a particular ticker's stocks
+            - 'show' is chosen when the user wants to see past stock data for a given ticker
             
             If you are not able to convert the user prompt into one of the commands, return:
             - error
@@ -129,64 +86,102 @@ COMPANY_TO_TICKER = {
     "american express": "AXP",
 }
 
-#* unused setup
-'''
-Examples:
-            User: I want to purchase Apple stock -> buy AAPL
-            User: Sell Tesla please -> sell TSLA
-            User: What's Google doing this week? -> show GOOGL week
-            User: Show me Microsoft -> show MSFT
+#* ------------------------------------------------------ functions ---------------------------------------------------------
+
+#* show [ticker] [start] [end]
+def show(ticker, start, end):
+    """
+    Fetches and visualizes the closing price of a stock over a given time period.
+
+    Parameters:
+        ticker (str): Stock ticker symbol (e.g., 'AAPL', 'TSLA').
+        start (str): Start date in 'YYYY-MM-DD' format.
+        end (str): End date in 'YYYY-MM-DD' format.
+    """
+    
+    # Download historical data
+    data = yf.download(ticker, start=start, end=end)
+
+    # Check if data was returned
+    if data.empty:
+        print(f"No data found for {ticker} between {start} and {end}.")
+        return
+
+    # Plot the closing price
+    plt.figure(figsize=(12, 6))
+    plt.plot(data['Close'], label='Close Price', color='blue')
+    plt.title(f"{ticker} Stock Price from {start} to {end}")
+    plt.xlabel("Date")
+    plt.ylabel("Price (USD)")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    
+    # save the plot so it can be returned to the front-end
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png")
+    plt.close() # to avoid errors
+    buf.seek(0)
+    
+    img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")\
+    
+    return img_base64
+
+#* should [ticker] be bought in the current timeframe or not
+def suggest(ticker):
+    """
+    Uses the AI agent to get a prediction of if the [ticker] is going up/down/neutral and accordingly give an
+    appropriate response
+    
+    Parameters:
+        ticker (str): Stock ticker symbol (e.g., 'AAPL', 'TSLA').
+    """
+    
+    #* return the answer and a system_prompt explaining how to reform the answer
+    return (
+        str(predict_next_day(ticker, MODEL_NAME)),
+        f'''
+        The next input is going to consist of two elements :
+        1. EIther 'up', 'down' or 'neutral' -- indicates whether {ticker} stock is going to move up/down/not-at-all
+        2. A list of three elements consisting of the probabilites of the AI agent predicting the stock to move 
+        down/neutral/up respectively
+        
+        The user has asked us to predict the stocks and the next input is the answer the agent has given. 
+        Use the input to craft a human-readable response that can be shown back to the user
+        Return just the human-readable response and nothing else.
+        
+        If the prediction is up -- then suggest to buy shares
+        If the prediction is down -- then suggest to sell shares
+        If the prediction is neutral -- suggest either to wait or suggest either buy/sell depending on if up/down has a higher
+        probability (respectively)
+        
+        Do not use the word "AI agent", assume you are the AI agent
+        '''
+    )
+
+#* normalize the command
+#* Convert name of company to appropriate ticker name
+def normalize_command(command):
+    #* split the command up into its components
+    command_components = command.split()
+    
+    #* if only one component is present, return it as is in a list
+    if len(command_components) < 2: return [command]
+    
+    #* normalize the name of the ticker to a standard
+    #* -- convert the ticker to lower case for easier processing
+    command_components[1] = command_components[1].lower()
+    
+    #* -- if the ticker given in is already in a standard format, leave it as is
+    if command_components[1] not in COMPANY_TO_TICKER.values(): 
+        #* otherwise convert it to a standard format
+        command_components[1] = COMPANY_TO_TICKER[command_components[1].lower()]    
+    
+    #* return the command components
+    return command_components
+    
 
 
-            - You must always output ONLY the ticker symbol (from the list below), never the company name
-            - If the user provides a company name, replace it with its corresponding ticker from the mapping list
-            - If the company name is not in the list, return "error"
-            
-Mapping list :
-                Apple → AAPL  
-                Microsoft → MSFT  
-                Google → GOOGL  
-                Alphabet → GOOGL  
-                Tesla → TSLA  
-                Amazon → AMZN  
-                Meta → META  
-                Facebook → META  
-                Nvidia → NVDA  
-                Netflix → NFLX  
-                Intel → INTC  
-                AMD → AMD  
-                Qualcomm → QCOM  
-                IBM → IBM  
-                Oracle → ORCL  
-                Adobe → ADBE  
-                Salesforce → CRM  
-                PayPal → PYPL  
-                Uber → UBER  
-                Lyft → LYFT  
-                Snap → SNAP  
-                Twitter → TWTR  
-                Coca-Cola → KO  
-                Pepsi → PEP  
-                McDonald’s → MCD  
-                Starbucks → SBUX  
-                Walmart → WMT  
-                Costco → COST  
-                Nike → NKE  
-                Disney → DIS  
-                Sony → SONY  
-                Samsung → SMSN.IL  
-                Alibaba → BABA  
-                Tencent → TCEHY  
-                Berkshire Hathaway → BRK.B  
-                JPMorgan → JPM  
-                Goldman Sachs → GS  
-                Bank of America → BAC  
-                Morgan Stanley → MS  
-                Citigroup → C  
-                Visa → V  
-                Mastercard → MA  
-                American Express → AXP
-'''
 
 
 

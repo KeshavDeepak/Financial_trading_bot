@@ -12,8 +12,8 @@ import json
 #* load up a saved agent
 model_name = "05 Aug - 17 57"
 
-# import the agent's saved info
-with open("lstm_nn/model_metadata.json", "r") as file:
+#* import the agent's saved info
+with open("./backend/lstm_nn/model_metadata.json", "r") as file:
     agent_info = next((model for model in json.load(file) if model["name"] == model_name), None)
 
 if not agent_info:
@@ -23,7 +23,7 @@ if not agent_info:
 agent = LSTMTradingAgent(look_back=agent_info['lookback'], train_test_split=agent_info['train_test_split'])
 
 # load the saved model
-agent.load_model(f"lstm_nn/{model_name}.h5", f"scalers/{model_name}.save")
+agent.load_model(f"./backend/lstm_nn/{model_name}.h5", f"./backend/scalers/{model_name}.save")
 df = agent.fetch_data(agent_info['ticker'], agent_info['start_date'], agent_info['end_date'], agent_info['interval'])
 agent.prepare_data()
 
@@ -44,8 +44,6 @@ agent.plot_trade_signals(trades)
 test_df = yf.download('AAPL', start='2023-01-01', end='2024-01-01')
 
 test_data = test_df[['Open', 'High', 'Low', 'Close', 'Volume']].values
-
-dates = test_df.index
 
 # Store predictions and true values
 predictions = []

@@ -1,5 +1,6 @@
 from datetime import datetime
 from lstm_nn_3 import LSTMTradingAgent
+# from backend.transformer import TransformerTradingAgent
 
 if __name__ == "__main__":
     # Initialize the trading agent
@@ -15,7 +16,7 @@ if __name__ == "__main__":
     interval = '1d'
     
     # set model hyperparameters
-    epochs = 100
+    epochs = 5
     batch_size = 32
     
     try:
