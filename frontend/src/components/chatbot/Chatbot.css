@@ -33,3 +33,17 @@
   /* left-aligned */
   align-self: flex-start; 
 }
+
+/* ----------------------------------------------- Chatbox.jsx styling ---------------------------------------------*/
+#chatbox-textarea {
+  width: 80vw;       /* 80% of the viewport width */
+  max-width: 600px;  /* optional: don't let it grow too big */
+  min-width: 200px;  /* optional: don't let it shrink too small */
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: none;      /* prevent manual resizing */
+
+  text-align: center;
+}

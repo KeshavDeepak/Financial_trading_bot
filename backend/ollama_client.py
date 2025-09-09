@@ -87,13 +87,14 @@ async def parse_command(request: Request):
 
 
 '''
+show [asset] [time_period]
+
 The various commands the client can parse are :
 OLD -- buy [asset] <shares> 
 OLD -- sell [asset] <shares>
 above two has been refactored into one function --> suggest [ticker]
 
 explain [concept]
-show [asset] [time_period]
 
 predict [asset] [time_period]
 compare [asset_1] vs [asset_2]

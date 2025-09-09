@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './Chatbot.css'
+import './Chatbot.css'; 
 
 import Dialogue from './Dialogue';
 import Chatbox from './Chatbox';
