@@ -5,7 +5,7 @@ import yfinance as yf
 
 from backend.lstm_nn_3 import LSTMTradingAgent
 
-# use the agent to get a prediction of the next day
+#* use the agent to get a prediction of the next day
 def predict_next_day(ticker, model_name):
     #* import the agent model's metadata in
     with open("./backend/lstm_nn/model_metadata.json", "r") as file:

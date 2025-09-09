@@ -53,13 +53,27 @@ async def parse_command(request: Request):
             '''
             answer, system_prompt = suggest(command_components[1]) 
             
-            #* create a temporary conversation log with the system_prompt and the answer for our ollama model
+            #* temporary conversation log with a system_prompt and the answer for our ollama model
             temp = [
                 {'role' : 'system', 'content' : system_prompt},
                 {'role' : 'user', 'content' : answer},
             ]
             
             #* call the ollama model and get a human-readable response back
+            response = chat(model=MODEL, messages=temp)
+            response = response.message.content.strip()
+        
+        case 'explain':
+            #* temporary conversation log with a system_prompt to generate an explanation of the input concept
+            temp = [
+                {'role' : 'system',
+                 'content' : f'''
+                    Give a brief explanation of the concept {command_components[1]}.
+                    Keep your explanation to 50 words and do not use markup in your response
+                 '''}
+            ]
+            
+            #* call the ollama model and get an explanation back
             response = chat(model=MODEL, messages=temp)
             response = response.message.content.strip()
             
@@ -78,8 +92,11 @@ OLD -- buy [asset] <shares>
 OLD -- sell [asset] <shares>
 above two has been refactored into one function --> suggest [ticker]
 
-predict [asset] [time_period]
-show [asset] [time_period]
-compare [asset_1] vs [asset_2]
 explain [concept]
+show [asset] [time_period]
+
+predict [asset] [time_period]
+compare [asset_1] vs [asset_2]
+
+help
 '''

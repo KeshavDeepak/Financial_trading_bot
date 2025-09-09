@@ -24,10 +24,12 @@ SETUP_MODEL_FOR_USER_PROMPT = {
             - show [ticker] [start] [end]  
                 [start] and [end] must strictly be in "yyyy-mm-dd" format
                 starting time must be before (chronologically) ending time
+            - explain [concept]
                 
             Functionality of each of the above commands 
             - 'suggest' is chosen when the user is asking for guidance on whether to buy/sell a particular ticker's stocks
             - 'show' is chosen when the user wants to see past stock data for a given ticker
+            - 'explain' is chosen when the user wants an explanation of a particular concept (will most likely be related to the domain of stocks)
             
             If you are not able to convert the user prompt into one of the commands, return:
             - error
@@ -143,7 +145,7 @@ def suggest(ticker):
         f'''
         The next input is going to consist of two elements :
         1. EIther 'up', 'down' or 'neutral' -- indicates whether {ticker} stock is going to move up/down/not-at-all
-        2. A list of three elements consisting of the probabilites of the AI agent predicting the stock to move 
+        2. A list of three elements consisting of the confidence levels (in probabilities) of the AI agent predicting the stock to move 
         down/neutral/up respectively
         
         The user has asked us to predict the stocks and the next input is the answer the agent has given. 
@@ -152,8 +154,7 @@ def suggest(ticker):
         
         If the prediction is up -- then suggest to buy shares
         If the prediction is down -- then suggest to sell shares
-        If the prediction is neutral -- suggest either to wait or suggest either buy/sell depending on if up/down has a higher
-        probability (respectively)
+        In all other cases -- suggest to wait or hold their position and mention that neither a up or a down is being predicted
         
         Do not use the word "AI agent", assume you are the AI agent
         '''
@@ -165,10 +166,10 @@ def normalize_command(command):
     #* split the command up into its components
     command_components = command.split()
     
-    #* if only one component is present, return it as is in a list
-    if len(command_components) < 2: return [command]
+    #* if command doesn't include a ticker, do not run the remaining code 
+    if command_components[0] == "explain": return command_components
     
-    #* normalize the name of the ticker to a standard
+    #* normalize the name of the ticker (command_components[1]) to that accepted by yfinance
     #* -- convert the ticker to lower case for easier processing
     command_components[1] = command_components[1].lower()
     
