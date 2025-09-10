@@ -3,6 +3,9 @@
 import io
 import base64
 
+#* make matplotlib run in a non-interactive manner
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import yfinance as yf
@@ -25,11 +28,13 @@ SETUP_MODEL_FOR_USER_PROMPT = {
                 [start] and [end] must strictly be in "yyyy-mm-dd" format
                 starting time must be before (chronologically) ending time
             - explain [concept]
-                
+            - backtest [ticker]
+            
             Functionality of each of the above commands 
             - 'suggest' is chosen when the user is asking for guidance on whether to buy/sell a particular ticker's stocks
             - 'show' is chosen when the user wants to see past stock data for a given ticker
             - 'explain' is chosen when the user wants an explanation of a particular concept (will most likely be related to the domain of stocks)
+            - 'backtest' is chosen when the user wants to backtest a ticker
             
             If you are not able to convert the user prompt into one of the commands, return:
             - error
@@ -38,6 +43,8 @@ SETUP_MODEL_FOR_USER_PROMPT = {
             - Correct any spelling mistakes in the company's name and return the proper name of the company
             - Your reply must be only the command, nothing else
             - All commands and their respective parameters must be filled in, nothing is to be left out
+            
+            
         '''
 }
 
@@ -101,15 +108,15 @@ def show(ticker, start, end):
         end (str): End date in 'YYYY-MM-DD' format.
     """
     
-    # Download historical data
+    #* Download historical data
     data = yf.download(ticker, start=start, end=end)
 
-    # Check if data was returned
+    #* Check if data was returned
     if data.empty:
         print(f"No data found for {ticker} between {start} and {end}.")
         return
 
-    # Plot the closing price
+    #* Plot the closing price
     plt.figure(figsize=(12, 6))
     plt.plot(data['Close'], label='Close Price', color='blue')
     plt.title(f"{ticker} Stock Price from {start} to {end}")
@@ -119,14 +126,15 @@ def show(ticker, start, end):
     plt.grid(True)
     plt.tight_layout()
     
-    # save the plot so it can be returned to the front-end
+    #* save the plot so it can be returned to the front-end
     buf = io.BytesIO()
     plt.savefig(buf, format="png")
     plt.close() # to avoid errors
     buf.seek(0)
     
-    img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")\
+    img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
     
+    #* return the plot
     return img_base64
 
 #* should [ticker] be bought in the current timeframe or not
@@ -180,8 +188,17 @@ def normalize_command(command):
     
     #* return the command components
     return command_components
-    
 
+#* backtest the given ticker
+def get_portfolio_plot(ticker):
+    #* backtest the ticker and store the portfolio values and trades 
+    portfolio_values, trades = backtest(ticker, MODEL_NAME)
+    
+    #* get the plot of the portfolio values
+    plot = portfolio_timeline_plot(portfolio_values)
+    
+    #* return the plot
+    return plot
 
 
 

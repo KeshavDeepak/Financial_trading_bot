@@ -69,13 +69,17 @@ async def parse_command(request: Request):
                 {'role' : 'system',
                  'content' : f'''
                     Give a brief explanation of the concept {command_components[1]}.
-                    Keep your explanation to 50 words and do not use markup in your response
+                    The concept will always be related to the domain of finance and trading.
+                    Keep your explanation to 100 words and do not use markup in your response.
                  '''}
             ]
             
             #* call the ollama model and get an explanation back
             response = chat(model=MODEL, messages=temp)
             response = response.message.content.strip()
+        
+        case 'backtest':            
+            response = get_portfolio_plot(command_components[1])
             
         case 'error':
             print('error')
@@ -87,17 +91,17 @@ async def parse_command(request: Request):
 
 
 '''
-show [asset] [time_period]
+AI powered commands --
+    suggest [ticker]
+    backtest [ticker]
+    
+    compare [ticker1] vs [ticker2] ?
 
-The various commands the client can parse are :
-OLD -- buy [asset] <shares> 
-OLD -- sell [asset] <shares>
-above two has been refactored into one function --> suggest [ticker]
+Visualization commands --
+    show [asset] [time_period]
+    explain [concept]
 
-explain [concept]
 
-predict [asset] [time_period]
-compare [asset_1] vs [asset_2]
-
-help
+Utility and info commands --
+    help ?
 '''

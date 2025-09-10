@@ -11,9 +11,13 @@ export default function Dialogue({ messages }) {
                 )
             }
             else if (msg.role == "assistant") {
-                if (msg.command == "show") {
+                if (msg.command == "show" || msg.command == "backtest") {
                     chat_bubbles.push(
-                        <img key={msg.id} src={`data:image/png;base64,${msg.content}`} />
+                        <img 
+                            key={msg.id}
+                            className="chat-image" 
+                            src={`data:image/png;base64,${msg.content}`} 
+                        />
                     )
                 }
                 else {

@@ -34,6 +34,13 @@
   align-self: flex-start; 
 }
 
+/* Images generated as responses */
+.chat-image {
+  max-width: 95%;
+  height: auto;
+  border-radius: 8px;
+}
+
 /* ----------------------------------------------- Chatbox.jsx styling ---------------------------------------------*/
 #chatbox-textarea {
   width: 80vw;       /* 80% of the viewport width */

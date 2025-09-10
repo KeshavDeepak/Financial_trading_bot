@@ -6,11 +6,7 @@ import Chatbox from './Chatbox';
 
 export default function Chatbot() {
     //* messages
-    const [messages, setMessages] = useState([
-        { role: 'assistant', content: 'Hello! How can I assist you today?', id: 1 , command:"introduction"},
-        { role: 'user', content: 'What is the current market trend?', id: 2 },
-        { role: 'assistant', content: 'The market is currently bullish.', id: 3, command:"analyze"}
-    ]);
+    const [messages, setMessages] = useState([]);
 
     //* handle user input 
     const handleUserInput = (user_prompt) => {
@@ -39,8 +35,6 @@ export default function Chatbot() {
             
             setMessages((prev_list) => [...prev_list, bot_response]);
         })
-        
-        
     }
 
     return (
