@@ -1,5 +1,5 @@
 from datetime import datetime
-from lstm_nn_3 import LSTMTradingAgent
+from backend.lstm_nn_3 import LSTMTradingAgent
 # from backend.transformer import TransformerTradingAgent
 
 if __name__ == "__main__":
@@ -7,9 +7,6 @@ if __name__ == "__main__":
     agent = LSTMTradingAgent(look_back=60, train_test_split=0.8)
     
     # Choose data to train on
-    # ticker = 'AAPL'
-    # start_date = '2015-01-01'
-    # end_date = '2023-01-01'
     ticker, start_date, end_date = 'AMD', '2018-01-01', '2023-12-31'
     
     initial_balance = 100
@@ -49,8 +46,8 @@ if __name__ == "__main__":
         # save model
         current_time = datetime.now().strftime("%d %b - %H %M")
         
-        agent.save_model("./lstm_nn/" + current_time + ".h5", 
-                         "./scalers/" + current_time + ".save",
+        agent.save_model("./backend/lstm_nn/" + current_time + ".h5", 
+                         "./backend/scalers/" + current_time + ".save",
                          current_time,
                          ticker, start_date, end_date, initial_balance, epochs, batch_size, interval)
         

@@ -138,6 +138,7 @@ def backtest(ticker, model_name, look_back=60, initial_balance=10000, close_inde
     portfolio_values = []
     trades = []
 
+    #* simple trading strategy using buy and sell signals
     for i in range(len(predicted_classes)):
         current_close = data[look_back + i][close_index]
         predicted_class = predicted_classes[i]

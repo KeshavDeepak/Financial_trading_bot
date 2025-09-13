@@ -43,8 +43,6 @@ SETUP_MODEL_FOR_USER_PROMPT = {
             - Correct any spelling mistakes in the company's name and return the proper name of the company
             - Your reply must be only the command, nothing else
             - All commands and their respective parameters must be filled in, nothing is to be left out
-            
-            
         '''
 }
 

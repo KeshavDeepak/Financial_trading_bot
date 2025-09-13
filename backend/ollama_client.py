@@ -43,7 +43,7 @@ async def parse_command(request: Request):
     #* filter through commands, utilize the appropriate function, and generate a response
     match command_components[0]:
         case 'show':
-            # resonse is an img64
+            #* response is an img64
             response = show(command_components[1], command_components[2], command_components[3]) 
             
         case 'suggest':
