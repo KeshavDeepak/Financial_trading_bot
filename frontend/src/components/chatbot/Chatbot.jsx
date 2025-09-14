@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './Chatbot.css'; 
 
 import Dialogue from './Dialogue';
@@ -7,6 +7,11 @@ import Chatbox from './Chatbox';
 export default function Chatbot() {
     //* messages
     const [messages, setMessages] = useState([]);
+
+    //* Scroll the full page to bottom every time messages change
+    useEffect(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }, [messages]);
 
     //* handle user input 
     const handleUserInput = (user_prompt) => {
