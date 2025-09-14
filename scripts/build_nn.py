@@ -1,6 +1,5 @@
 from datetime import datetime
 from backend.lstm_nn_3 import LSTMTradingAgent
-# from backend.transformer import TransformerTradingAgent
 
 if __name__ == "__main__":
     # Initialize the trading agent

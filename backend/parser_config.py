@@ -29,12 +29,14 @@ SETUP_MODEL_FOR_USER_PROMPT = {
                 starting time must be before (chronologically) ending time
             - explain [concept]
             - backtest [ticker]
+            - help
             
             Functionality of each of the above commands 
             - 'suggest' is chosen when the user is asking for guidance on whether to buy/sell a particular ticker's stocks
             - 'show' is chosen when the user wants to see past stock data for a given ticker
             - 'explain' is chosen when the user wants an explanation of a particular concept (will most likely be related to the domain of stocks)
             - 'backtest' is chosen when the user wants to backtest a ticker
+            - 'help' is chosen when the user is not sure what he can ask for and wants to know the available list of commands
             
             If you are not able to convert the user prompt into one of the commands, return:
             - error
@@ -173,7 +175,7 @@ def normalize_command(command):
     command_components = command.split()
     
     #* if command doesn't include a ticker, do not run the remaining code 
-    if command_components[0] == "explain": return command_components
+    if command_components[0] in ['explain', 'error', 'help']: return command_components
     
     #* normalize the name of the ticker (command_components[1]) to that accepted by yfinance
     #* -- convert the ticker to lower case for easier processing

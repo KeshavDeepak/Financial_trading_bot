@@ -80,9 +80,12 @@ async def parse_command(request: Request):
         
         case 'backtest':            
             response = get_portfolio_plot(command_components[1])
+        
+        case 'help':
+            response = "<**It doesn't matter, response is hardcoded into dialogue.jsx**>"
             
         case 'error':
-            print('error')
+            response = "I could not understand, please try again"
         
     return {
         'command' : command_components[0],

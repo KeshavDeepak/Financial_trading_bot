@@ -108,7 +108,7 @@ class LSTMTradingAgent:
             
         return np.array(X), np.array(y)
     
-    def prepare_data(self):
+    def prepare_data(self, ):
         """
         Prepare the training and testing datasets
         """
@@ -138,7 +138,6 @@ class LSTMTradingAgent:
             Dense(units=3, activation='softmax')
         ])
         
-        # optimizer = Adam(learning_rate=0.001)
         self.model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
         
     def train_model(self, epochs=100, batch_size=32):
@@ -357,7 +356,7 @@ class LSTMTradingAgent:
         print(f"Model saved to {model_path}, scaler to {scaler_path}")
         
         # save the important hyperparameters 
-        with open('./lstm_nn/model_metadata.json', 'r+') as file:
+        with open('./backend/lstm_nn/model_metadata.json', 'r+') as file:
             models = json.load(file)
             
             models.append({
